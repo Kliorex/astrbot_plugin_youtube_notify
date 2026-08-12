@@ -18,7 +18,6 @@ from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent, MessageChain, filter
 from astrbot.api.message_components import Image, Plain
 from astrbot.api.star import Context, Star, register
-from astrbot.api.event.filter import GreedyStr
 
 # Atom namespaces used by YouTube RSS
 NS = {
@@ -29,6 +28,27 @@ NS = {
 
 CHANNEL_ID_RE = re.compile(r"^UC[\w-]{22}$")
 HANDLE_RE = re.compile(r"^@?[\w.-]{3,}$")
+
+
+def _arg_after_subcmd(event: AstrMessageEvent, *keywords: str) -> str:
+    """从消息文本中提取子命令后的参数（兼容各版本，不依赖 GreedyStr）。"""
+    text = (event.message_str or "").strip()
+    for head in ("yt", "/yt"):
+        if text.lower().startswith(head):
+            text = text[len(head) :].strip()
+            break
+    low = text.lower()
+    for kw in keywords:
+        k = kw.lower()
+        if low.startswith(k):
+            return text[len(kw) :].strip()
+        m = re.match(rf"^{re.escape(kw)}\s+(.+)$", text, re.I)
+        if m:
+            return m.group(1).strip()
+    # 若子命令已被框架剥掉，message_str 可能只剩参数本身
+    if text and not any(text.lower().startswith(k.lower()) for k in keywords):
+        return text
+    return ""
 
 
 @dataclass
@@ -549,9 +569,9 @@ class YouTubeNotifyPlugin(Star):
         yield event.plain_result(text)
 
     @yt.command("订阅", alias={"sub", "subscribe"})
-    async def cmd_sub(self, event: AstrMessageEvent, target: GreedyStr = ""):
+    async def cmd_sub(self, event: AstrMessageEvent):
         """订阅频道：/yt 订阅 <频道>"""
-        payload = (target or "").strip()
+        payload = _arg_after_subcmd(event, "订阅", "sub", "subscribe")
         if not payload:
             yield event.plain_result("用法：/yt 订阅 @频道名 或 channel_id 或频道链接")
             return
@@ -565,9 +585,9 @@ class YouTubeNotifyPlugin(Star):
             yield event.plain_result(f"❌ 订阅失败：{e}")
 
     @yt.command("取消", alias={"unsub", "unsubscribe", "退订"})
-    async def cmd_unsub(self, event: AstrMessageEvent, target: GreedyStr = ""):
+    async def cmd_unsub(self, event: AstrMessageEvent):
         """取消订阅：/yt 取消 <频道>"""
-        payload = (target or "").strip()
+        payload = _arg_after_subcmd(event, "取消", "unsub", "unsubscribe", "退订")
         if not payload:
             yield event.plain_result("用法：/yt 取消 @频道名 或 channel_id")
             return
@@ -583,9 +603,9 @@ class YouTubeNotifyPlugin(Star):
         yield event.plain_result(self._list_session(event.unified_msg_origin))
 
     @yt.command("最新", alias={"latest", "new"})
-    async def cmd_latest(self, event: AstrMessageEvent, target: GreedyStr = ""):
+    async def cmd_latest(self, event: AstrMessageEvent):
         """查看最新视频：/yt 最新 <频道>"""
-        payload = (target or "").strip()
+        payload = _arg_after_subcmd(event, "最新", "latest", "new")
         if not payload:
             yield event.plain_result("用法：/yt 最新 @频道名")
             return
@@ -605,3 +625,4 @@ class YouTubeNotifyPlugin(Star):
             yield event.plain_result(msg)
         except Exception as e:
             yield event.plain_result(f"❌ 检查失败：{e}")
+
