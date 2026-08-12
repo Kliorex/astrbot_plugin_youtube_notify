@@ -1,0 +1,36 @@
+{
+  "enabled": {
+    "description": "启用自动推送",
+    "type": "bool",
+    "hint": "关闭后仍可用指令手动查询，但不会后台轮询推送",
+    "default": true
+  },
+  "poll_interval_seconds": {
+    "description": "轮询间隔（秒）",
+    "type": "int",
+    "hint": "建议 300~900。过短可能被 YouTube 限流",
+    "default": 600
+  },
+  "max_push_per_channel": {
+    "description": "单次每个频道最多推送条数",
+    "type": "int",
+    "hint": "避免积压时刷屏",
+    "default": 3
+  },
+  "include_thumbnail": {
+    "description": "推送时附带封面图",
+    "type": "bool",
+    "default": true
+  },
+  "http_proxy": {
+    "description": "HTTP 代理（可选）",
+    "type": "string",
+    "hint": "例如 http://127.0.0.1:7890，留空则不使用",
+    "default": ""
+  },
+  "user_agent": {
+    "description": "请求 User-Agent",
+    "type": "string",
+    "default": "Mozilla/5.0 (compatible; AstrBot-YouTubeNotify/1.0)"
+  }
+}

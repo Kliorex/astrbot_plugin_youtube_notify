@@ -1,0 +1,7 @@
+name: astrbot_plugin_youtube_notify
+display_name: YouTube 频道更新推送
+desc: 订阅 YouTube 频道，通过官方 RSS 轮询检测新视频并推送到当前会话。支持 @handle / channel_id / 频道链接。
+short_desc: 油管频道更新推送（RSS）
+version: v1.0.0
+author: local
+repo: ""
